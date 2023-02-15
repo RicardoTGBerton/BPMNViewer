@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>XSD BPMN listing</title>
+<script>
+</script>
+</head>
+<body>
+
+<img src="LogoTRT9aRegiao.jpg" style="width: 20%; display: block; margin-left: auto; margin-right: auto" />
+<h1 style="background-color: #0D273D; color: #ffffff; text-align: center">XSD BPMN Listing</h1>
+
+
+<div>
+</div>
+
+<div>
+  <p id="index"></p>
+  <p id="conteudo"></p>
+</div>
+
+<script>
+
+function MontaProc(xDoc){
+	console.log(xDoc);
+	let flow = xDoc.getElementsByTagName("xsd:element");
+	let total = flow.length;
+	let listContent = "<br><p>Flow Elements</p><ul>";
+	for(i=0;i<total;i++){
+	  for(ii=0;ii<flow[i].attributes.length;ii++){
+        if(flow[i].attributes[ii].textContent == "flowElement"){
+	      listContent += "<li>";
+	      listContent += "name:" + flow[i].attributes[0].textContent + " type:" + flow[i].attributes[1].textContent + " group:" + flow[i].attributes[ii].textContent;
+	      listContent += "</li>";
+		  }
+		}
+	  }
+	listContent += "</ul>"
+	document.getElementById("index").innerHTML = listContent;
+}
+
+var xmlDoc;
+//some code to load Semantic.xsd into xmlDoc
+//One possible source: http://www.omg.org/spec/BPMN/20100501/Semantic.xsd
+function loadDoc() {
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      MontaProc(this);
+    }
+  };
+  xhttp.open("GET", "http://www.omg.org/spec/BPMN/20100501/Semantic.xsd", true);
+  xhttp.withCredentials = true;
+  xhttp.send();
+}
+//MontaProc(xmlDoc);
+loadDoc();
+
+</script>
+</body>
+</html>

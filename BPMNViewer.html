@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BPMN Viewer</title>
+<script>
+</script>
+</head>
+<body>
+
+<img src="LogoTRT9aRegiao.jpg" style="width: 20%; display: block; margin-left: auto; margin-right: auto" />
+<h1 style="background-color: #0D273D; color: #ffffff; text-align: center">BPMN Viewer</h1>
+
+
+<div>
+  <input type="file" id="file-input" /><br>
+  <button id="read-button">Load File</button>
+</div>
+
+<div>
+  <p id="index"></p>
+  <p id="conteudo"></p>
+  <p>Conteúdo do Arquivo:</p>
+  <pre id="file-contents"></pre>
+</div>
+
+<script>
+
+// lists startEvent elements
+function listStart(lxDoc){
+  flow = lxDoc.getElementsByTagName("startEvent");
+  total = flow.length;
+  let lContent = "<br><p>Starts</p><ul>";
+  for(i=0;i<total;i++){
+	lContent += "<li>";
+	lContent += "(" + flow[i].attributes[0].textContent + ")" + flow[i].attributes[1].textContent;
+	console.log(flow[i].childNodes);
+	for(ii=0;ii<flow[i].childNodes.length;ii++){
+//	  console.log(flow[i].childNodes[ii].nodeName);
+	  if(flow[i].childNodes[ii].nodeName == "outgoing"){
+	    lContent += "<ul><li>" + "(out)" + flow[i].childNodes[ii].textContent + "</li></ul>";
+		}
+	  }
+	lContent += "</li>";
+	}
+  lContent += "</ul>";
+//  console.log(lContent);
+  return lContent;
+  }
+
+function listFlowElemnts(lxDoc, elementName = ""){
+  flow = lxDoc.getElementsByTagName(elementName);
+  total = flow.length;
+  let lContent = "";
+  if(total > 0){
+	lContent = "<br><p>" + elementName + "</p><ul>";
+	for(i=0;i<total;i++){
+	  lContent += "<li>";
+	  lContent += "(" + flow[i].attributes[0].textContent + ")" + flow[i].attributes[1].textContent;
+	  console.log(flow[i].childNodes);
+	  for(ii=0;ii<flow[i].childNodes.length;ii++){
+	    console.log(flow[i].childNodes[ii].nodeName);
+	    if(flow[i].childNodes[ii].nodeName == "outgoing"){
+	      lContent += "<ul><li>" + "(out)" + flow[i].childNodes[ii].textContent + "</li></ul>";
+		  }
+		}
+	  lContent += "</li>";
+	  for(ii=0;ii<flow[i].childNodes.length;ii++){
+	    console.log(flow[i].childNodes[ii].nodeName);
+	    if(flow[i].childNodes[ii].nodeName == "incoming"){
+		  lContent += "<ul><li>" + "(in)" + flow[i].childNodes[ii].textContent + "</li></ul>";
+		  }
+		}
+	  lContent += "</li>";
+	  }
+    lContent += "</ul>";
+    }
+  return lContent;
+  }
+
+
+function MontaProc(xDoc){
+	console.log(xDoc);
+	let flow = xDoc.getElementsByTagName("lane");
+	let total = flow.length;
+	let listContent = "<p>Lanes</p>"
+	listContent += "<ul>";
+	for(i=0; i<total; i++) {
+//	  console.log(flow[i].childNodes[0].nodeValue);
+      listContent += "<li>";
+	  listContent += "(" + flow[i].attributes[0].textContent + ")" + flow[i].attributes[1].textContent;
+	  listContent += "</li>";
+	  }
+	listContent += "</ul>";
+//	listContent += listStart(xDoc);
+//	console.log(listContent);
+// lists flow elements
+    for(e=0;e<FlowElementList.length;e++){
+	  console.log(FlowElementList[e].name);
+	  listContent += listFlowElemnts(xDoc, FlowElementList[e].name);
+	  }	
+	document.getElementById("index").innerHTML = listContent;
+}
+
+let FlowElementList = [];
+FlowElementList[0] = {name:"adHocSubProcess",type:"tAdHocSubProcess",group:"flowElement"};
+FlowElementList[1] = {name:"boundaryEvent",type:"tBoundaryEvent",group:"flowElement"};
+FlowElementList[2] = {name:"businessRuleTask",type:"tBusinessRuleTask",group:"flowElement"};
+FlowElementList[3] = {name:"callActivity",type:"tCallActivity",group:"flowElement"};
+FlowElementList[4] = {name:"callChoreography",type:"tCallChoreography",group:"flowElement"};
+FlowElementList[5] = {name:"flowElement",type:"0",group:"flowElement"};
+FlowElementList[6] = {name:"choreographyTask",type:"tChoreographyTask",group:"flowElement"};
+FlowElementList[7] = {name:"complexGateway",type:"tComplexGateway",group:"flowElement"};
+FlowElementList[8] = {name:"dataObject",type:"tDataObject",group:"flowElement"};
+FlowElementList[9] = {name:"dataObjectReference",type:"tDataObjectReference",group:"flowElement"};
+FlowElementList[10] = {name:"dataStoreReference",type:"tDataStoreReference",group:"flowElement"};
+FlowElementList[11] = {name:"endEvent",type:"tEndEvent",group:"flowElement"};
+FlowElementList[12] = {name:"event",type:"tEvent",group:"flowElement"};
+FlowElementList[13] = {name:"eventBasedGateway",type:"tEventBasedGateway",group:"flowElement"};
+FlowElementList[14] = {name:"exclusiveGateway",type:"tExclusiveGateway",group:"flowElement"};
+FlowElementList[15] = {name:"flowElement",type:"tFlowElement",group:"flowElement"};
+FlowElementList[16] = {name:"implicitThrowEvent",type:"tImplicitThrowEvent",group:"flowElement"};
+FlowElementList[17] = {name:"inclusiveGateway",type:"tInclusiveGateway",group:"flowElement"};
+FlowElementList[18] = {name:"intermediateCatchEvent",type:"tIntermediateCatchEvent",group:"flowElement"};
+FlowElementList[19] = {name:"intermediateThrowEvent",type:"tIntermediateThrowEvent",group:"flowElement"};
+FlowElementList[20] = {name:"manualTask",type:"tManualTask",group:"flowElement"};
+FlowElementList[21] = {name:"parallelGateway",type:"tParallelGateway",group:"flowElement"};
+FlowElementList[22] = {name:"flowElement",type:"0",group:"flowElement"};
+FlowElementList[23] = {name:"receiveTask",type:"tReceiveTask",group:"flowElement"};
+FlowElementList[24] = {name:"scriptTask",type:"tScriptTask",group:"flowElement"};
+FlowElementList[25] = {name:"sendTask",type:"tSendTask",group:"flowElement"};
+FlowElementList[26] = {name:"sequenceFlow",type:"tSequenceFlow",group:"flowElement"};
+FlowElementList[27] = {name:"serviceTask",type:"tServiceTask",group:"flowElement"};
+FlowElementList[28] = {name:"startEvent",type:"tStartEvent",group:"flowElement"};
+FlowElementList[29] = {name:"subChoreography",type:"tSubChoreography",group:"flowElement"};
+FlowElementList[30] = {name:"flowElement",type:"0",group:"flowElement"};
+FlowElementList[31] = {name:"subProcess",type:"tSubProcess",group:"flowElement"};
+FlowElementList[32] = {name:"flowElement",type:"0",group:"flowElement"};
+FlowElementList[33] = {name:"task",type:"tTask",group:"flowElement"};
+FlowElementList[34] = {name:"transaction",type:"tTransaction",group:"flowElement"};
+FlowElementList[35] = {name:"userTask",type:"tUserTask",group:"flowElement"};
+console.log(FlowElementList);
+
+var xmlDoc;
+document.querySelector("#read-button").addEventListener('click', function() {
+	let file = document.querySelector("#file-input").files[0];
+	let reader = new FileReader();
+	reader.addEventListener('load', function(e) {
+   		let text = e.target.result;
+		var parser;
+   		document.querySelector("#file-contents").textContent = text;
+		parser = new DOMParser();
+        xmlDoc = parser.parseFromString(text,"text/xml");
+		MontaProc(xmlDoc);
+	});
+    reader.readAsText(file);
+});
+
+
+
+</script>
+</body>
+</html>
