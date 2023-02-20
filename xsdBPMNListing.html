@@ -13,11 +13,15 @@
 
 
 <div>
+  <input type="file" id="file-input" /><br>
+  <button id="read-button">Load File</button>
 </div>
 
 <div>
   <p id="index"></p>
   <p id="conteudo"></p>
+  <p>Conteúdo do Arquivo:</p>
+  <pre id="file-contents"></pre>
 </div>
 
 <script>
@@ -43,6 +47,7 @@ function MontaProc(xDoc){
 var xmlDoc;
 //some code to load Semantic.xsd into xmlDoc
 //One possible source: http://www.omg.org/spec/BPMN/20100501/Semantic.xsd
+//manual loading for now
 function loadDoc() {
   var xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function() {
@@ -50,7 +55,7 @@ function loadDoc() {
       MontaProc(this);
     }
   };
-  xhttp.open("GET", "http://www.omg.org/spec/BPMN/20100501/Semantic.xsd", true);
+  xhttp.open("GET", "Semantic.xsd", true);
   xhttp.withCredentials = true;
   xhttp.send();
 }

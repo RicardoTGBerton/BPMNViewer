@@ -28,84 +28,35 @@
 
 <script>
 
-//search flow elements list ontil finds end event or a dead end. Returns an array
-function SeekFlow(PElist = [{}], inArray = []){
-//  console.log("inArray:", inArray);
-  if(inArray === undefined){
-    inArray = [{}];
-	}
-  let resArrayf = [{}];
-//  let endSeek = false;
-  let outlist = [{}];
-  let resArray1 = [{}];
-  let iT = inArray[inArray.length - 1].indexType;
-  let iE = inArray[inArray.length - 1].indexElement;
-  let tamPEl = PElist.length;
-  let qsf = PElist[iT].Elements[iE].seqFlow.length;
-  let co = 0;
-  let flowContinues = false;
-  for(isf=0;isf<qsf;isf++){
-    if("out" in PElist[iT].Elements[iE].seqFlow[isf]){
-      outlist[co] = PElist[iT].Elements[iE].seqFlow[isf].out;
-	  co++;
-	  }
-	}
-  if(outlist.length > 0){
-    for(io=0;io<outlist.length;io++){
-      for(il=0;il<tamPEl;il++){
-        qtElm = PElist[il].Elements.length;
-	    for(iel=0;iel<qtElm;iel++){
-	      qts = PElist[il].Elements[iel].seqFlow.length;
-		  for(isf=0;isf<qts;isf++){
-		    if(PElist[il].Elements[iel].seqFlow[isf].in == outlist[io]){
-		      resArray1[0] = {indexType: il, indexElement: iel};
-			  if("out" in PElist[il].Elements[iel].seqFlow[isf]){
-			    flowContinues = true;
-			    }
-//			  console.log("resArray1:", resArray1);
-//			  ca++;
-			  }
-			}
-		  }
-	    }
-	  	if(resArray1[0].length > 0 && flowContinues){
-//	  	if("out" in PElist[il].Elements[iel].seqFlow[isf] && PElist[il].Elements[iel].seqFlow[isf].in == outlist[io]){
-//		  console.log(resArray1);
-		  resArrayf[0] = inArray.concat(SeekFlow(PElist, resArray1));
-		  } else {
-		    resArrayf = inArray.concat(resArray1);
-			}
-	  }
-	}
-//  console.log("resArrayf:", resArrayf);
-  return resArrayf;
-  }
-
 //builds process sequence flow for index
 function ProcSeqFlow(PElm = []){
   let startFlow = "startEvent";
-//  let endFlow = "endEvent";
-  let FlowSq = [];
-  let NextSeq = [];
-  let FlowSf = [];
+  let endFlow = "endEvent";
+  let FlowSeq = [];
   let cf = 0;
   let listSize = PElm.length;
   for(i=0;i<listSize;i++){
     let qtElements = PElm[i].Elements.length;
 	if(PElm[i].name == startFlow){
 	  for(ei=0;ei<qtElements;ei++){
-//		FlowSq[cf] = [{indexType: i, indexElement: ei}];
-//		console.log('in val FlowSq:', FlowSq[cf]);
-		NextSeq = SeekFlow(PElm, [{indexType: i, indexElement: ei}]);
-		console.log("NextSeq:", NextSeq);
-//		FlowSf = FlowSq[cf].concat(NextSeq);
-		FlowSf.push(NextSeq);
-		console.log("FlowSf:", FlowSf);
-//		cf++;
+	    FlowSeq[cf] = {id: PElm[i].Elements[ei].id, name: PElm[i].Elements[ei].name};
+		cf++;
+		for(ep=0;ep<listSize;ep++){
+		  qElm = PElm[ep].Elements.length;
+		  for(eep=0;eep<qElm;eep++){
+		    qSeqFlow = PElm[ep].Elements[eep].seqFlow.length;
+			for(sf=0;sf<qSeqFlow;sf++){
+			  if(PElm[ep].Elements[eep].seqFlow[sf].in == PElm[i].Elements[ei].seqFlow[0].out){
+			    FlowSeq[cf] = {id: PElm[ep].Elements[eep].id, name: PElm[ep].Elements[eep].name};
+				cf++;
+				}
+			  }
+			}
+		  }
 		}
-      }
+	  }
 	}
-  return FlowSf;
+  return FlowSeq;
   }
 
 //list flow elements function
@@ -209,7 +160,6 @@ function MontaProc(xDoc){
 	document.getElementById("conteudo").innerHTML = listContent;
 }
 
-
 let FlowElementList = [];
 FlowElementList[0] = {name:"adHocSubProcess",type:"tAdHocSubProcess",group:"flowElement"};
 FlowElementList[1] = {name:"boundaryEvent",type:"tBoundaryEvent",group:"flowElement"};
@@ -267,16 +217,16 @@ document.querySelector("#read-button").addEventListener('click', function() {
 	    indexCont += "<ul>";
 		for(i=0;i<FlowSequence.length;i++){
 		  indexCont += "<li>";
-		  indTp = FlowSequence[i].indexType;
-		  indElm = FlowSequence[i].indexElement;
-		  indexCont += "<a href='#" + ProcElements[indTp].Elements[indElm].id + "'>" + ProcElements[indTp].Elements[indElm].name + "</a>";
+		  indexCont += "<a href='#" + FlowSequence[i].id + "'>" + FlowSequence[i].name + "</a>";
 		  indexCont += "</li>";
 		  }
         indexCont += "</ul>";
  	    document.getElementById("index").innerHTML = indexCont;
+//		console.log(FlowSequence);
 	});
     reader.readAsText(file);
 });
+//console.log(ProcElements);
 
 
 </script>
