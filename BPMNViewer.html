@@ -20,6 +20,8 @@
 <div>
   <p>Index</p>
   <p id="index"></p>
+  <p>Content</p>
+  <p id="documentation"></p>
   <p>Elements List</p>
   <p id="conteudo"></p>
   <p>Conteúdo do Arquivo:</p>
@@ -32,12 +34,11 @@
 function SeekFlow(PElist = [{}], inArray = []){
 //  console.log("inArray:", inArray);
   if(inArray === undefined){
-    inArray = [{}];
+    inArray = [];
 	}
-  let resArrayf = [{}];
-//  let endSeek = false;
-  let outlist = [{}];
-  let resArray1 = [{}];
+  let resArrayf = [];
+  let outlist = [];
+  let resArray1 = [];
   let iT = inArray[inArray.length - 1].indexType;
   let iE = inArray[inArray.length - 1].indexElement;
   let tamPEl = PElist.length;
@@ -58,22 +59,28 @@ function SeekFlow(PElist = [{}], inArray = []){
 	      qts = PElist[il].Elements[iel].seqFlow.length;
 		  for(isf=0;isf<qts;isf++){
 		    if(PElist[il].Elements[iel].seqFlow[isf].in == outlist[io]){
-		      resArray1[0] = {indexType: il, indexElement: iel};
-			  if("out" in PElist[il].Elements[iel].seqFlow[isf]){
-			    flowContinues = true;
+			  resArray1[0] = {indexType: il, indexElement: iel};
+			  for(isfo=0;isfo<qts;isfo++){
+			    if("out" in PElist[il].Elements[iel].seqFlow[isfo]){
+			      flowContinues = true;
+//				  console.log("...seqFlow:", PElist[il].Elements[iel].seqFlow[isfo]);
+				  break;
+			      }
 			    }
-//			  console.log("resArray1:", resArray1);
-//			  ca++;
+//			  console.log("flowContinues:", flowContinues);
 			  }
 			}
 		  }
 	    }
-	  	if(resArray1[0].length > 0 && flowContinues){
-//	  	if("out" in PElist[il].Elements[iel].seqFlow[isf] && PElist[il].Elements[iel].seqFlow[isf].in == outlist[io]){
-//		  console.log(resArray1);
-		  resArrayf[0] = inArray.concat(SeekFlow(PElist, resArray1));
+//	  	console.log("resArray1:", resArray1);
+//		console.log("flowContinues:", flowContinues);
+//		console.log("Flow continues condiction:", ((resArray1.length > 0) && flowContinues));
+		if((resArray1.length > 0) && flowContinues){
+//		  console.log("Flow continues");
+		  resArrayf = inArray.concat(SeekFlow(PElist, resArray1));
 		  } else {
-		    resArrayf = inArray.concat(resArray1);
+//		    console.log("Flow stop");
+			resArrayf = inArray.concat(resArray1);
 			}
 	  }
 	}
@@ -84,7 +91,6 @@ function SeekFlow(PElist = [{}], inArray = []){
 //builds process sequence flow for index
 function ProcSeqFlow(PElm = []){
   let startFlow = "startEvent";
-//  let endFlow = "endEvent";
   let FlowSq = [];
   let NextSeq = [];
   let FlowSf = [];
@@ -94,14 +100,12 @@ function ProcSeqFlow(PElm = []){
     let qtElements = PElm[i].Elements.length;
 	if(PElm[i].name == startFlow){
 	  for(ei=0;ei<qtElements;ei++){
-//		FlowSq[cf] = [{indexType: i, indexElement: ei}];
-//		console.log('in val FlowSq:', FlowSq[cf]);
 		NextSeq = SeekFlow(PElm, [{indexType: i, indexElement: ei}]);
-		console.log("NextSeq:", NextSeq);
-//		FlowSf = FlowSq[cf].concat(NextSeq);
-		FlowSf.push(NextSeq);
-		console.log("FlowSf:", FlowSf);
-//		cf++;
+//		console.log("NextSeq:", NextSeq);
+		for(is=0;is<NextSeq.length;is++){
+		  FlowSf.push(NextSeq[is]);
+//		  console.log("FlowSf:", FlowSf);
+		  }
 		}
       }
 	}
@@ -129,8 +133,7 @@ function listFlowElemnts(lxDoc, elementName = ""){
 	  for(ai=0;ai<flow[i].attributes.length;ai++){
 		if(flow[i].attributes[ai].name == "id"){
 		  attribId = flow[i].attributes[ai].textContent;
-		  lContent += "<a id='" + attribId + "'>";
-		  lContent += "(" + attribId + ")";
+		  lContent += "<a id='" + attribId + "_old'>";
 		  }
 		}
 	  for(ai=0;ai<flow[i].attributes.length;ai++){
@@ -141,6 +144,13 @@ function listFlowElemnts(lxDoc, elementName = ""){
 		  }
 	  }
 	  listElm[i] = {id: attribId, name: attribName, seqFlow: []};
+	  for(ii=0;ii<flow[i].childNodes.length;ii++){
+	    if(flow[i].childNodes[ii].nodeName == pfx + "documentation"){
+	      lContent += "<ul><li>" + "Documentation: " + flow[i].childNodes[ii].textContent + "</li></ul>";
+		  listElm[i].seqFlow[ci] = {doc: flow[i].childNodes[ii].textContent};
+		  ci++;
+		  }
+		}
 	  for(ii=0;ii<flow[i].childNodes.length;ii++){
 	    if(flow[i].childNodes[ii].nodeName == pfx + "outgoing"){
 	      lContent += "<ul><li>" + "(out)" + flow[i].childNodes[ii].textContent + "</li></ul>";
@@ -180,11 +190,11 @@ function MontaProc(xDoc){
 	  listContent += "<ul>";
 	  for(i=0; i<total; i++) {
         listContent += "<li>";
-		for(ai=0;ai<flow[i].attributes.length;ai++){
-		  if(flow[i].attributes[ai].name == "id"){
-		    listContent += "(" + flow[i].attributes[ai].textContent + ")";
-			}
-		  }
+//		for(ai=0;ai<flow[i].attributes.length;ai++){
+//		  if(flow[i].attributes[ai].name == "id"){
+//		    listContent += "(" + flow[i].attributes[ai].textContent + ")";
+//			}
+//		  }
 		for(ai=0;ai<flow[i].attributes.length;ai++){
 		  if(flow[i].attributes[ai].name == "name"){
 		    listContent += flow[i].attributes[ai].textContent;
@@ -250,7 +260,7 @@ FlowElementList[35] = {name:"userTask",type:"tUserTask",group:"flowElement"};
 let ProcElements = [];
 
 let FlowSequence = [{}];
-var xmlDoc, indexCont;
+var xmlDoc, indexCont, procDoc;
 
 document.querySelector("#read-button").addEventListener('click', function() {
 	let file = document.querySelector("#file-input").files[0];
@@ -258,22 +268,41 @@ document.querySelector("#read-button").addEventListener('click', function() {
 	reader.addEventListener('load', function(e) {
    		let text = e.target.result;
 		indexCont = "";
+		procDoc = "";
 		var parser;
    		document.querySelector("#file-contents").textContent = text;
 		parser = new DOMParser();
         xmlDoc = parser.parseFromString(text,"text/xml");
 		MontaProc(xmlDoc);
 		FlowSequence = ProcSeqFlow(ProcElements);
+		console.log("FlowSequence:", FlowSequence);
 	    indexCont += "<ul>";
 		for(i=0;i<FlowSequence.length;i++){
-		  indexCont += "<li>";
+	      indexCont += "<li>";
 		  indTp = FlowSequence[i].indexType;
 		  indElm = FlowSequence[i].indexElement;
+		  console.log("indTp:", indTp, " indElm:", indElm);
+		  console.log("ProcElements:", ProcElements[3]);
 		  indexCont += "<a href='#" + ProcElements[indTp].Elements[indElm].id + "'>" + ProcElements[indTp].Elements[indElm].name + "</a>";
 		  indexCont += "</li>";
 		  }
         indexCont += "</ul>";
- 	    document.getElementById("index").innerHTML = indexCont;
+		procDoc += "<hr><ul>";
+		for(p=0;p<FlowSequence.length;p++){
+		  procDoc += "<li>";
+		  indTp = FlowSequence[p].indexType;
+		  indElm = FlowSequence[p].indexElement;
+		  procDoc += "<a id='" + ProcElements[indTp].Elements[indElm].id + "'>" + ProcElements[indTp].Elements[indElm].name + "</a>";
+		  console.log("ProcElements:", ProcElements);
+		  for(di=0;di<ProcElements[indTp].Elements[indElm].seqFlow.length;di++){
+		    if("doc" in ProcElements[indTp].Elements[indElm].seqFlow[di]){
+			  procDoc += "<ul><li>Dcoumentation:" + ProcElements[indTp].Elements[indElm].seqFlow[di].doc + "</li></ul>";
+			  }
+			}
+		  }
+ 	    procDoc += "</ul>";
+		document.getElementById("index").innerHTML = indexCont;
+ 	    document.getElementById("documentation").innerHTML = procDoc;
 	});
     reader.readAsText(file);
 });
