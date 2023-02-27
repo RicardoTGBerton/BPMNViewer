@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BPMN Viewer - with bpmn-js</title>
+<script src="https://unpkg.com/bpmn-js@11.4.1/dist/bpmn-viewer.development.js"></script>
+</head>
+<body>
+
+<img src="YourLogo.jpg" style="width: 10%; display: block; margin-left: auto; margin-right: auto" />
+<h1 style="background-color: #003505; color: #ffffff; text-align: center">BPMN Viewer (powered by bpmn-js)</h1>
+
+
+<div>
+  <input type="file" accept="text/bpmn" name="file_input" id="file_input" onchange="openLocalDiagram(event, openBpmnDiagram)" />
+</div>
+
+<div>
+  <p>Index:</p>
+  <p id="index"></p>
+  <p>Documentation:</p>
+  <p id="documentation"></p>
+</div>
+
+<div>
+  <p>Diagram:</p>
+  <div id="canvas"></div>
+</div>
+
+<script>
+
+let FlowElementList = [];
+FlowElementList[0] = {name:"adHocSubProcess",type:"tAdHocSubProcess",group:"flowElement"};
+FlowElementList[1] = {name:"boundaryEvent",type:"tBoundaryEvent",group:"flowElement"};
+FlowElementList[2] = {name:"businessRuleTask",type:"tBusinessRuleTask",group:"flowElement"};
+FlowElementList[3] = {name:"callActivity",type:"tCallActivity",group:"flowElement"};
+FlowElementList[4] = {name:"callChoreography",type:"tCallChoreography",group:"flowElement"};
+FlowElementList[5] = {name:"flowElement",type:"0",group:"flowElement"};
+FlowElementList[6] = {name:"choreographyTask",type:"tChoreographyTask",group:"flowElement"};
+FlowElementList[7] = {name:"complexGateway",type:"tComplexGateway",group:"flowElement"};
+FlowElementList[8] = {name:"dataObject",type:"tDataObject",group:"flowElement"};
+FlowElementList[9] = {name:"dataObjectReference",type:"tDataObjectReference",group:"flowElement"};
+FlowElementList[10] = {name:"dataStoreReference",type:"tDataStoreReference",group:"flowElement"};
+FlowElementList[11] = {name:"endEvent",type:"tEndEvent",group:"flowElement"};
+FlowElementList[12] = {name:"event",type:"tEvent",group:"flowElement"};
+FlowElementList[13] = {name:"eventBasedGateway",type:"tEventBasedGateway",group:"flowElement"};
+FlowElementList[14] = {name:"exclusiveGateway",type:"tExclusiveGateway",group:"flowElement"};
+FlowElementList[15] = {name:"flowElement",type:"tFlowElement",group:"flowElement"};
+FlowElementList[16] = {name:"implicitThrowEvent",type:"tImplicitThrowEvent",group:"flowElement"};
+FlowElementList[17] = {name:"inclusiveGateway",type:"tInclusiveGateway",group:"flowElement"};
+FlowElementList[18] = {name:"intermediateCatchEvent",type:"tIntermediateCatchEvent",group:"flowElement"};
+FlowElementList[19] = {name:"intermediateThrowEvent",type:"tIntermediateThrowEvent",group:"flowElement"};
+FlowElementList[20] = {name:"manualTask",type:"tManualTask",group:"flowElement"};
+FlowElementList[21] = {name:"parallelGateway",type:"tParallelGateway",group:"flowElement"};
+FlowElementList[22] = {name:"flowElement",type:"0",group:"flowElement"};
+FlowElementList[23] = {name:"receiveTask",type:"tReceiveTask",group:"flowElement"};
+FlowElementList[24] = {name:"scriptTask",type:"tScriptTask",group:"flowElement"};
+FlowElementList[25] = {name:"sendTask",type:"tSendTask",group:"flowElement"};
+FlowElementList[26] = {name:"sequenceFlow",type:"tSequenceFlow",group:"flowElement"};
+FlowElementList[27] = {name:"serviceTask",type:"tServiceTask",group:"flowElement"};
+FlowElementList[28] = {name:"startEvent",type:"tStartEvent",group:"flowElement"};
+FlowElementList[29] = {name:"subChoreography",type:"tSubChoreography",group:"flowElement"};
+FlowElementList[30] = {name:"flowElement",type:"0",group:"flowElement"};
+FlowElementList[31] = {name:"subProcess",type:"tSubProcess",group:"flowElement"};
+FlowElementList[32] = {name:"flowElement",type:"0",group:"flowElement"};
+FlowElementList[33] = {name:"task",type:"tTask",group:"flowElement"};
+FlowElementList[34] = {name:"transaction",type:"tTransaction",group:"flowElement"};
+FlowElementList[35] = {name:"userTask",type:"tUserTask",group:"flowElement"};
+
+var viewer = new BpmnJS({
+                         container: '#canvas',
+						 height: 800
+						 });
+
+let openLocalDiagram = function (event, openCallback) {        
+        var input = event.target;
+        var reader = new FileReader();
+        reader.onload = function () {
+            if (openCallback && typeof openCallback === 'function') {
+                openCallback(reader.result);
+            }
+
+            console.log('end load diagram from local');
+        };
+        reader.readAsText(input.files[0]);  
+
+    };
+
+function buildIndex(elmList = []){
+  let idxCont = "";
+  for(i=0;i<elmList.length;i++){
+    if(elmList[i].name != undefined && elmList[i].$type != 'bpmn:SequenceFlow'){
+	  idxCont += "<li><a href='#" + elmList.id + "'>" + elmList[i].name + "</a></li>";
+      }
+	}
+  idxCont += "</ul>";
+  return idxCont;
+  }
+
+function buildDocumentation(elmList = []){
+  let docCont = "";
+  for(i=0;i<elmList.length;i++){
+    if(elmList[i].name != undefined && elmList[i].$type != 'bpmn:SequenceFlow'){
+	  docCont += "<li><a id='" + elmList.id + "'>" + elmList[i].name + "</li>";
+	  if("documentation" in elmList[i]){
+	    docCont += "<ul><li>" + elmList[i].documentation[0].text + "</li></ul>";
+		}
+      }
+	}
+  return docCont;
+  }
+
+let flowElmList = [];
+let indexCont = "";
+let documentationCont = "";
+
+let openBpmnDiagram = function (xml) {
+        viewer.importXML(xml, function (error) {
+            if (error) {
+                return;
+            }
+
+            var canvas = viewer.get('canvas');
+
+            canvas.zoom('fit-viewport');
+
+            /* ********************************************************************************* */
+            /* Override modeler canvas scroll to new object */
+            canvas.scroll({ dx: +52, dy: -0 }); /* not important if you use large screen */
+            /* ********************************************************************************* */            
+            var elementRegistry = viewer.get('elementRegistry');
+			var listElm = elementRegistry.getAll();
+			for(elm of listElm) {
+		      for(it=0;it<FlowElementList.length;it++){
+				if(elm.type.replace('bpmn:', '').toLowerCase() == FlowElementList[it].name.toLowerCase()){
+			      var boElm = elementRegistry.get(elm.id).businessObject;
+				  flowElmList.push(boElm);
+				  if("documentation" in boElm){
+				    var docElm = boElm.documentation[0].text;
+				    }
+                  }
+				}
+			  }
+			indexCont += "<ul>"
+			indexCont += buildIndex(flowElmList);
+			documentationCont += "<ul>";
+			documentationCont += buildDocumentation(flowElmList);
+			document.getElementById("index").innerHTML = indexCont;
+			document.getElementById("documentation").innerHTML = documentationCont;
+        });
+   };
+
+</script>
+</body>
+</html>
