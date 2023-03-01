@@ -16,6 +16,7 @@
 </div>
 
 <div>
+  <p id="list"></p>
   <p>Index:</p>
   <p id="index"></p>
   <p>Documentation:</p>
@@ -86,34 +87,110 @@ let openLocalDiagram = function (event, openCallback) {
 
     };
 
-function buildIndex(elmList = []){
+//cretaes a list of indexes in flow sequence order from start to end or to a dead end
+function sortSequenceFlow(elmList = [], inArray = []){
+//  ncall++;
+//  console.log("called sortSequenceFlow ", ncall, " times");
+  let flowContinues = false;
+  let alreadyListed = false;
+  let resArray = [];
+  let interArray = [];
+  let outList = [];
+  let idx = inArray[inArray.length - 1];
+  let elmlstSize = elmList.length;
+  let outSize = 0;
+  if("outgoing" in elmList[idx]){
+    outSize = elmList[idx].outgoing.length;
+	}
+  let co = 0;
+  for(io=0;io<outSize;io++){
+    if("outgoing" in elmList[idx]){
+	  outList[co] = elmList[idx].outgoing[io].targetRef.id;
+	  co++;
+	  }
+	}
+  if(outList.length > 0){
+	for(let o=0;o<outList.length;o++){
+	  for(ie=0;ie<elmlstSize;ie++){
+		if("incoming" in elmList[ie]){
+		  qtdIn = elmList[ie].incoming.length;
+          if(elmList[ie].id == outList[o]){
+			interArray.push(ie);
+			if("outgoing" in elmList[ie]){
+			  flowContinues = true;
+			  }
+			}
+		  }
+		}
+		if(interArray.length > 0 && flowContinues){
+		  resArray = inArray.concat(sortSequenceFlow(elmList, interArray));
+		  } else {
+		    resArray = inArray.concat(interArray);
+			}
+	  }
+	}
+//  console.log("resArray:", resArray);
+  return resArray;
+  }
+
+//builds the index of elements
+function buildIndex(elmList = [], fSequence = []){
   let idxCont = "";
-  for(i=0;i<elmList.length;i++){
-    if(elmList[i].name != undefined && elmList[i].$type != 'bpmn:SequenceFlow'){
-	  idxCont += "<li><a href='#" + elmList.id + "'>" + elmList[i].name + "</a></li>";
+  for(i=0;i<fSequence.length;i++){
+    if(elmList[fSequence[i]].name != undefined && elmList[fSequence[i]].$type != 'bpmn:SequenceFlow'){
+	  idxCont += "<li><a href='#" + elmList[fSequence[i]].id + "'>" + elmList[fSequence[i]].name + "</a></li>";
       }
 	}
   idxCont += "</ul>";
   return idxCont;
   }
 
-function buildDocumentation(elmList = []){
+//builds the elements list with its documentation, if any
+function buildDocumentation(elmList = [], fSequence = []){
   let docCont = "";
-  for(i=0;i<elmList.length;i++){
-    if(elmList[i].name != undefined && elmList[i].$type != 'bpmn:SequenceFlow'){
-	  docCont += "<li><a id='" + elmList.id + "'>" + elmList[i].name + "</li>";
-	  if("documentation" in elmList[i]){
-	    docCont += "<ul><li>" + elmList[i].documentation[0].text + "</li></ul>";
+  for(i=0;i<fSequence.length;i++){
+    if(elmList[fSequence[i]].name != undefined && elmList[fSequence[i]].$type != 'bpmn:SequenceFlow'){
+	  docCont += "<li><a id='" + elmList[fSequence[i]].id + "'>" + elmList[fSequence[i]].name + "</li>";
+	  if("documentation" in elmList[fSequence[i]]){
+	    docCont += "<ul><li>" + elmList[fSequence[i]].documentation[0].text + "</li></ul>";
 		}
-      }
+	  }
 	}
   return docCont;
   }
 
+//buils a list of elements out of order just for debugging purpouses
+function buildElemtsList(elmList = []){
+  let eListCont = "";
+  eListCont += "<p>List of Elements:</p><ul>";
+  for(i=0;i<elmList.length;i++){
+	eListCont += "<li><a id='" + elmList[i].id + "'>" + elmList[i].name + " id: " + elmList[i].id + "</li>";
+    if("incoming" in elmList[i]){
+	  for(ii=0;ii<elmList[i].incoming.length;ii++){
+	    eListCont += "<ul><li>incoming: " + elmList[i].incoming[ii].sourceRef.id + "</li></ul>";
+	    }
+	  }
+    if("outgoing" in elmList[i]){
+	  for(ii=0;ii<elmList[i].outgoing.length;ii++){
+	    eListCont += "<ul><li>outgoing: " + elmList[i].outgoing[ii].targetRef.id + "</li></ul>";
+	    }
+	  }
+    }
+  eListCont += "</ul>";
+  return eListCont;
+  }
+
+
 let flowElmList = [];
+let flowSequence = [];
+let seqFlow = [];
+let iArray = [];
 let indexCont = "";
 let documentationCont = "";
+let listCont = "";
+let ncall = 0;
 
+//Let user load a bpmn file, calls index and listing build functions and diagram drwaing function
 let openBpmnDiagram = function (xml) {
         viewer.importXML(xml, function (error) {
             if (error) {
@@ -141,10 +218,22 @@ let openBpmnDiagram = function (xml) {
                   }
 				}
 			  }
+			for(i=0;i<flowElmList.length;i++){
+			  if(flowElmList[i].$type == 'bpmn:StartEvent'){
+			    iArray[0] = i;
+				seqFlow = sortSequenceFlow(flowElmList, iArray);
+				for(is=0;is<seqFlow.length;is++){
+				  flowSequence.push(seqFlow[is]);
+				  }
+//				console.log("flowSequence:", flowSequence);
+				}
+			  }
 			indexCont += "<ul>"
-			indexCont += buildIndex(flowElmList);
+			indexCont += buildIndex(flowElmList, flowSequence);
 			documentationCont += "<ul>";
-			documentationCont += buildDocumentation(flowElmList);
+			documentationCont += buildDocumentation(flowElmList, flowSequence);
+//			listCont += buildElemtsList(flowElmList);
+//			document.getElementById("list").innerHTML = listCont;
 			document.getElementById("index").innerHTML = indexCont;
 			document.getElementById("documentation").innerHTML = documentationCont;
         });
